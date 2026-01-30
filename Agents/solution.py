@@ -53,4 +53,49 @@ def solve(robot: Robot) -> None:
     # Example: Check for nearby fires
     fire_count = robot.sense_fires_around()
 
+    potential_fires = set()
+    fires = set()
+    safe = set()
+    safe.add(person_pos)
+
+    def is_move_safe(dir) -> bool:
+        dx, dy = dir.values
+        new_pos = Position(robot.position.x + dx, robot.position.y + dy)
+        return new_pos in safe
+
+    while not robot.is_carrying_person or robot.position != exit_pos:
+        fire_count = robot.sense_fires_around()
+        if fire_count == 0:
+            safe.add(Position(robot.position.x + 1, robot.position.y))
+            safe.add(Position(robot.position.x - 1, robot.position.y))
+            safe.add(Position(robot.position.x, robot.position.y + 1))
+            safe.add(Position(robot.position.x, robot.position.y - 1))
+        else:
+            potential_fires.add(Position(robot.position.x + 1, robot.position.y))
+            potential_fires.add(Position(robot.position.x - 1, robot.position.y))
+            potential_fires.add(Position(robot.position.x, robot.position.y + 1))
+            potential_fires.add(Position(robot.position.x, robot.position.y - 1))
+        potential_fires = potential_fires.difference(safe)
+
+        if not robot.is_carrying_person:
+            person_delta = Position(person_pos.x - robot.position.x, person_pos.y - robot.position.y)
+            if person_delta.y < 0:
+                robot.move(Direction.FORWARD)
+            elif person_delta.y > 0:
+                robot.move(Direction.BACKWARD)
+            elif person_delta.x < 0:
+                robot.move(Direction.LEFT)
+            elif person_delta.x > 0:
+                robot.move(Direction.RIGHT)
+        else:
+            exit_delta = Position(exit_pos.x - robot.position.x, exit_pos.y - robot.position.y)
+            if exit_delta.y < 0:
+                robot.move(Direction.FORWARD)
+            elif exit_delta.y > 0:
+                robot.move(Direction.BACKWARD)
+            elif exit_delta.x < 0:
+                robot.move(Direction.LEFT)
+            elif exit_delta.x > 0:
+                robot.move(Direction.RIGHT)
+
     # Navigate to person and return to exit - mission ends automatically!
