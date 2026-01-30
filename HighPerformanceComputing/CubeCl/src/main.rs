@@ -5,9 +5,9 @@ use cubecl::prelude::*;
 #[cube(launch_unchecked)]
 fn compute_bbf<F: Float>(max_iter: u32, vec_size: u32, output: &mut Array<f32>) {
 
-    if ABSOLUTE_POS < max_iter as usize {
-        let mut id = 0;
-        for i in 0..vec_size {
+    if ABSOLUTE_POS <= max_iter as usize {
+        let mut id = ABSOLUTE_POS;
+        for _ in 0..vec_size {
             let k = id as f32;
             let mut power = 1.0;
             for _ in 0..id {
@@ -16,18 +16,16 @@ fn compute_bbf<F: Float>(max_iter: u32, vec_size: u32, output: &mut Array<f32>) 
             let val = 1. / power;
             let denom = 8. * k;
             let sum = 4. / (denom + 1.) - 2. / (denom + 4.) - 1. / (denom + 5.) - 1. / (denom + 6.);
-            output[i as usize] = val * sum;
+            output[id as usize] = val * sum;
             id += 1;
         }
     }
 }
 
-fn final_sum(arr: &[f32], size: usize) -> f64 {
+fn final_sum(arr: &[f32]) -> f64 {
     let mut sum = 0.0;
-    for i in 0..size {
-        let e = arr[i];
-        println!("{e}");
-        sum += arr[i] as f64;
+    for i in arr {
+        sum += *i as f64;
     }
     sum
 }
@@ -35,8 +33,9 @@ fn final_sum(arr: &[f32], size: usize) -> f64 {
 pub fn launch<R: Runtime>(device: &R::Device) {
     let client = R::client(device);
 
-    let vectorization = 2usize;
-    let max_iter = 4;//1000_00_000u32;
+    // Don't really understand the vectorization and high terms are all equal to 0 anyways...
+    let vectorization = 1usize; // 4usize
+    let max_iter = 1000u32;// 1000_00_000u32;
 
     let output_handle = client.empty(max_iter as usize * core::mem::size_of::<f32>());
 
@@ -56,7 +55,7 @@ pub fn launch<R: Runtime>(device: &R::Device) {
 
     let arr = f32::from_bytes(&arr_pointer);
 
-    let result = final_sum(arr, vectorization);
+    let result = final_sum(arr);
 
     println!("Answer => {result}",);
 }
