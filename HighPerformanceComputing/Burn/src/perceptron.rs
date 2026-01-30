@@ -30,16 +30,17 @@ impl Perceptron {
         let input_tensor = Tensor::<Backend, 1>::from_floats(inputs, &device);
 
         // Compute dot product: sum of (weights * inputs)
+        let x = (self.weights.clone() * input_tensor).sum();
 
         // Return the sum passed through the activation function
-        1
+        Perceptron::activate(x.into_scalar())
     }
 
     // TODO: Implement the activation function
     //       You can try different ones such as step, sigmoid, or Sign
     fn activate(s: f32) -> i32 {
         // 0 for
-        1
+        (1.0 / (1.0 + (-s).exp())) as i32
     }
 
     /// TODO: Implement the training method
@@ -48,7 +49,10 @@ impl Perceptron {
         let error = (desired - guess) as f32;
 
         // Update weights: w += learning_rate * error * input
-        let adjustment = 0;
+        let device = Default::default();
+
+        let input_tensor = Tensor::<Backend, 1>::from_floats(inputs, &device);
+        let adjustment = self.learning_rate * error * input_tensor;
 
         self.weights = self.weights.clone() + adjustment;
     }
